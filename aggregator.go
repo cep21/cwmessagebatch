@@ -30,9 +30,10 @@ type CloudwatchClient interface {
 }
 
 var _ CloudwatchClient = &cloudwatch.CloudWatch{}
+var _ CloudwatchClient = &Aggregator{}
 
 type Aggregator struct {
-	Client *cloudwatch.CloudWatch
+	Client CloudwatchClient
 	Config Config
 }
 
@@ -51,7 +52,6 @@ func (c *Aggregator) onGo(f func(errIdx int, bucket []*cloudwatch.MetricDatum), 
 }
 
 // Note: More difficult to support PutMetricDataRequest since it is not one request.Request, but many
-
 func (c *Aggregator) PutMetricData(input *cloudwatch.PutMetricDataInput) (*cloudwatch.PutMetricDataOutput, error) {
 	return c.PutMetricDataWithContext(context.Background(), input)
 }

@@ -710,7 +710,8 @@ func makeDatum(in *cloudwatch.MetricDatum, arr []float64) {
 	}
 }
 
-func matchSingleDatum(t *testing.T, dt *cloudwatch.MetricDatum, client *cloudwatch.CloudWatch, dp *cloudwatch.Datapoint) {
+func matchSingleDatum(t *testing.T, dt *cloudwatch.MetricDatum, clientOriginal CloudwatchClient, dp *cloudwatch.Datapoint) {
+	client := clientOriginal.(*cloudwatch.CloudWatch)
 	getOut, err := client.GetMetricStatistics(&cloudwatch.GetMetricStatisticsInput{
 		MetricName: dt.MetricName,
 		Dimensions: dt.Dimensions,
