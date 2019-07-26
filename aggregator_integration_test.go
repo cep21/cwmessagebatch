@@ -3,8 +3,12 @@
 package cwmessagebatch
 
 import (
+	"fmt"
+	"math"
+	"math/rand"
 	"sort"
 	"strconv"
+	"strings"
 	"testing"
 	"time"
 
@@ -34,6 +38,57 @@ func baseDatum(metricName string) *cloudwatch.MetricDatum {
 		MetricName:        aws.String(generateMetricName(metricName)),
 		StorageResolution: aws.Int64(1),
 	}
+}
+
+// Reverse engineer a datapoint from values
+func datapointFromValues(vals []float64) *cloudwatch.Datapoint {
+	if len(vals) == 0 {
+		return nil
+	}
+	ret := &cloudwatch.Datapoint{
+		SampleCount: aws.Float64(1),
+		Minimum:     aws.Float64(vals[0]),
+		Maximum:     aws.Float64(vals[0]),
+		Sum:         aws.Float64(vals[0]),
+	}
+	for _, v := range vals[1:] {
+		if v > *ret.Maximum {
+			ret.Maximum = aws.Float64(v)
+		}
+		if v < *ret.Minimum {
+			ret.Minimum = aws.Float64(v)
+		}
+		ret.Sum = aws.Float64(*ret.Sum + v)
+		ret.SampleCount = aws.Float64(*ret.SampleCount + 1)
+	}
+	return ret
+}
+
+// Longest possible metric name
+func longMetricName(baseName string) string {
+	validChars := "abcdefghijklmnopqrstuvwxyz"
+	validChars += strings.ToUpper(validChars)
+	validChars += "0123456789"
+	for i := 0; i < 250; i++ {
+		baseName = baseName + string(validChars[rand.Intn(len(validChars))])
+	}
+	return baseName[0:250]
+}
+
+func largeBaseDatum(metricName string) *cloudwatch.MetricDatum {
+	ret := &cloudwatch.MetricDatum{
+		Timestamp:         &datumTimestamp,
+		MetricName:        aws.String(longMetricName(generateMetricName(metricName))),
+		StorageResolution: aws.Int64(1),
+	}
+	ret.Dimensions = make([]*cloudwatch.Dimension, 10)
+	for i := 0; i < 10; i++ {
+		ret.Dimensions[i] = &cloudwatch.Dimension{
+			Name:  aws.String(longMetricName(fmt.Sprintf("dim%d", i))),
+			Value: aws.String(longMetricName("avalue")),
+		}
+	}
+	return ret
 }
 
 type expectedPoints func(t *testing.T)
@@ -98,6 +153,10 @@ func TestIntegrationAggregator(t *testing.T) {
 		{
 			name: "TestPyramidHeightOffsetAggregation",
 			f:    testPyramidHeightOffsetAggregation,
+		},
+		{
+			name: "TestManyLargeValues",
+			f:    testManyLargeValues,
 		},
 	}
 	verify := make([]expectedPoints, 0, len(runs))
@@ -308,6 +367,35 @@ func testManyValuesBadSampleCount(t *testing.T) expectedPoints {
 			Maximum:     aws.Float64((numValues - 1) * 10),
 			Sum:         aws.Float64(numValues * (numValues - 1) / 2),
 		})
+	}
+}
+
+// Test a single, very large data send.
+// This should spilt by size
+func testManyLargeValues(t *testing.T) expectedPoints {
+	a := setupClient(t, nil)
+	// Should become 3 batches
+	//const numValues = 150 * 2 + 1
+	const numValues = maxValuesSize - 1
+	// Make a bunch of datum
+	var datum []*cloudwatch.MetricDatum
+	floatVals := make([][]float64, 0, maxDatumSize)
+	for i := 0; i < maxDatumSize-1; i++ {
+		dat := largeBaseDatum(fmt.Sprintf("TestManyLargeValues%d", i))
+		rands := randoms(numValues)
+		floatVals = append(floatVals, rands)
+		makeDatum(dat, rands)
+		datum = append(datum, dat)
+	}
+
+	toCheck := datum[0]
+	_, err := a.PutMetricData(&cloudwatch.PutMetricDataInput{
+		Namespace:  &testNamespace,
+		MetricData: datum,
+	})
+	require.NoError(t, err)
+	return func(t *testing.T) {
+		matchSingleDatum(t, toCheck, a.Client, datapointFromValues(floatVals[0]))
 	}
 }
 
@@ -569,6 +657,16 @@ func floatByCount(arr []float64) map[float64]int {
 	ret := make(map[float64]int)
 	for _, a := range arr {
 		ret[a]++
+	}
+	return ret
+}
+
+func randoms(times int) []float64 {
+	ret := make([]float64, 0, times)
+	for i := 0; i < times; i++ {
+		// Round the numbers a bit so we don't loose precision in CW
+		v := math.Floor(rand.Float64()*1024*1024) / 1024 * 1024
+		ret = append(ret, v)
 	}
 	return ret
 }

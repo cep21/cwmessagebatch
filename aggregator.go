@@ -13,16 +13,16 @@ import (
 
 type Config struct {
 	// True will reset all datum to the UTC timezone before submitting them
-	ResetUTC              bool
+	ResetUTC bool
 	// True will empty out the "unit" field of datum that have a unit not explicitly documented at
 	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricDatum.html
 	ClearInvalidUnits bool
 	// True will *not* use goroutines to send all the batches at once and will send the batches serially after they are
 	// created
-	SerialSends           bool
+	SerialSends bool
 	// Callback executed when weird datum or RPC calls force us to drop some of the datum from a request we've had to
 	// split.
-	OnDroppedDatum        func(datum *cloudwatch.MetricDatum)
+	OnDroppedDatum func(datum *cloudwatch.MetricDatum)
 }
 
 type CloudwatchClient interface {

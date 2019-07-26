@@ -15,7 +15,7 @@ const (
 	// a limit of "Each PutMetricData request is limited to 40 KB in size for HTTP POST requests"
 	// Of course they include the headers in their value.  So, we take the 40k and subtract some extra meta information
 	// to give us a comfortable limit and that's how we get 38k
-	putMetricDataKBRequestSizeLimit = 38 * 1000
+	putMetricDataKBRequestSizeLimit = 38 * 1024
 )
 
 type awsRequestSizeError struct {
@@ -27,7 +27,7 @@ func (e *awsRequestSizeError) Error() string {
 }
 
 func (e *awsRequestSizeError) Code() string {
-	return "RequestSizeError"
+	return "RequestEntityTooLarge"
 }
 
 func (e *awsRequestSizeError) Message() string {
@@ -43,9 +43,9 @@ func (e *awsRequestSizeError) RequestSizeError() {
 
 type requestSizeError interface {
 	RequestSizeError()
+	awserr.Error
 }
 
-var _ awserr.Error = &awsRequestSizeError{}
 var _ requestSizeError = &awsRequestSizeError{}
 
 // buildPostGZip construct a gzip'd post request.  Put this *after* the regular handler so it can
