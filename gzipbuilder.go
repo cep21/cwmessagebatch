@@ -80,9 +80,10 @@ func buildPostGZip(r *request.Request) {
 }
 
 func GZipBody(req *request.Request) {
+	const handlerName = "cwmessagebatch.gzip"
 	// Add the GZip handler
-	gzipHandler := request.NamedHandler{Name: "cwmessagebatch.gzip", Fn: buildPostGZip}
+	gzipHandler := request.NamedHandler{Name: handlerName, Fn: buildPostGZip}
 	// Protect from double adds
-	req.Handlers.Build.Remove(gzipHandler)
+	req.Handlers.Build.RemoveByName(handlerName)
 	req.Handlers.Build.PushBackNamed(gzipHandler)
 }
