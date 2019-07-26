@@ -25,15 +25,15 @@ type Config struct {
 	OnDroppedDatum func(datum *cloudwatch.MetricDatum)
 }
 
-type CloudwatchClient interface {
+type CloudWatchClient interface {
 	PutMetricDataWithContext(aws.Context, *cloudwatch.PutMetricDataInput, ...request.Option) (*cloudwatch.PutMetricDataOutput, error)
 }
 
-var _ CloudwatchClient = &cloudwatch.CloudWatch{}
-var _ CloudwatchClient = &Aggregator{}
+var _ CloudWatchClient = &cloudwatch.CloudWatch{}
+var _ CloudWatchClient = &Aggregator{}
 
 type Aggregator struct {
-	Client CloudwatchClient
+	Client CloudWatchClient
 	Config Config
 }
 
