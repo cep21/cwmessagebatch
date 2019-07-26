@@ -12,9 +12,16 @@ import (
 )
 
 type Config struct {
-	SkipResetUTC          bool
-	SkipClearInvalidUnits bool
+	// True will reset all datum to the UTC timezone before submitting them
+	ResetUTC              bool
+	// True will empty out the "unit" field of datum that have a unit not explicitly documented at
+	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricDatum.html
+	ClearInvalidUnits bool
+	// True will *not* use goroutines to send all the batches at once and will send the batches serially after they are
+	// created
 	SerialSends           bool
+	// Callback executed when weird datum or RPC calls force us to drop some of the datum from a request we've had to
+	// split.
 	OnDroppedDatum        func(datum *cloudwatch.MetricDatum)
 }
 
@@ -55,12 +62,12 @@ func (c *Aggregator) PutMetricDataWithContext(ctx aws.Context, input *cloudwatch
 	if input == nil {
 		return c.Client.PutMetricDataWithContext(ctx, input)
 	}
-	if !c.Config.SkipClearInvalidUnits {
+	if c.Config.ClearInvalidUnits {
 		for i := range input.MetricData {
 			input.MetricData[i] = clearInvalidUnits(input.MetricData[i])
 		}
 	}
-	if !c.Config.SkipResetUTC {
+	if c.Config.ResetUTC {
 		for i := range input.MetricData {
 			input.MetricData[i] = resetToUTC(input.MetricData[i])
 		}
@@ -111,6 +118,8 @@ func clearInvalidUnits(datum *cloudwatch.MetricDatum) *cloudwatch.MetricDatum {
 	return datum
 }
 
+// Documented on https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html under
+// "the Values and Counts method enables you to publish up to 150 values per metric with one PutMetricData request"
 const maxValuesSize = 150
 
 func splitLargeValueArray(in *cloudwatch.MetricDatum) []*cloudwatch.MetricDatum {
@@ -155,7 +164,9 @@ func splitLargeValueArray(in *cloudwatch.MetricDatum) []*cloudwatch.MetricDatum 
 	return ret
 }
 
-const maxDatumSize = 10
+// Documented on https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html under
+// "Each request is also limited to no more than 20 different metrics"
+const maxDatumSize = 20
 
 func bucketDatum(in []*cloudwatch.MetricDatum) [][]*cloudwatch.MetricDatum {
 	ret := make([][]*cloudwatch.MetricDatum, 0, 1+len(in)/maxDatumSize)
