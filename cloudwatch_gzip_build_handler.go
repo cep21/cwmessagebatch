@@ -4,9 +4,10 @@ import (
 	"bytes"
 	"compress/gzip"
 	"fmt"
+	"io"
+
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/aws/request"
-	"io"
 )
 
 const (
