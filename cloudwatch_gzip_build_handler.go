@@ -10,9 +10,10 @@ import (
 )
 
 const (
-	// putMetricDataKBRequestSizeLimit represents the maximum size of a CloudWatch PutMetricData request in bytes
-	// By default, this is 40 KB, but we'll use 38 KB to avoid getting too close to this limit
-	// See: https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html
+	// On https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutMetricData.html they document
+	// a limit of "Each PutMetricData request is limited to 40 KB in size for HTTP POST requests"
+	// Of course they include the headers in their value.  So, we take the 40k and subtract some extra meta information
+	// to give us a comfortable limit and that's how we get 38k
 	putMetricDataKBRequestSizeLimit = 38 * 1000
 )
 
