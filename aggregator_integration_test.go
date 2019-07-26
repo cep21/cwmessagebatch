@@ -27,6 +27,7 @@ var datumTimestamp time.Time
 func init() {
 	datumTimestamp = time.Now().UTC().Truncate(time.Second)
 }
+
 func baseDatum(metricName string) *cloudwatch.MetricDatum {
 	return &cloudwatch.MetricDatum{
 		Timestamp:         &datumTimestamp,
