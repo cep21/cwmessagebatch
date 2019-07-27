@@ -21,11 +21,7 @@ import (
 
 const freshRunInt = 6
 
-var datumTimestamp time.Time
-
-func init() {
-	datumTimestamp = time.Now().UTC().Truncate(time.Second)
-}
+var datumTimestamp = time.Now().UTC().Truncate(time.Second)
 
 type expectedPoints func(t *testing.T)
 type datumStruct struct {
@@ -95,6 +91,7 @@ func testAggregator(t *testing.T, integration bool) {
 	verify := make([]expectedPoints, 0, len(runs))
 	verifyNames := make([]string, 0, len(runs))
 	for _, run := range runs {
+		run := run
 		t.Run(run.name, func(t *testing.T) {
 			verification := run.f(t, integration)
 			if verification != nil {
@@ -109,6 +106,7 @@ func testAggregator(t *testing.T, integration bool) {
 		t.Log("Verifying points")
 	}
 	for i, v := range verify {
+		v := v
 		t.Run("Verify"+verifyNames[i], func(t *testing.T) {
 			v(t)
 		})
@@ -153,7 +151,7 @@ func longMetricName(baseName string) string {
 	validChars += strings.ToUpper(validChars)
 	validChars += "0123456789"
 	for i := 0; i < 250; i++ {
-		baseName = baseName + string(validChars[rand.Intn(len(validChars))])
+		baseName += string(validChars[rand.Intn(len(validChars))])
 	}
 	return baseName[0:250]
 }
@@ -617,7 +615,7 @@ func testPyramidHeightOffsetAggregation(t *testing.T, integration bool) expected
 
 // -------------------- Helper functions below this
 
-func setupClient(t *testing.T, pb func(r *request.Request), integration bool) *Aggregator {
+func setupClient(t *testing.T, _ func(r *request.Request), integration bool) *Aggregator {
 	if !integration {
 		return &Aggregator{
 			Client: &memoryCloudWatchClient{},
@@ -626,9 +624,6 @@ func setupClient(t *testing.T, pb func(r *request.Request), integration bool) *A
 	sess, err := session.NewSession()
 	assert.NoError(t, err)
 	cwClient := cloudwatch.New(sess)
-	if pb != nil {
-		cwClient.Handlers.Complete.PushBack(pb)
-	}
 	return &Aggregator{
 		Client: cwClient,
 	}
@@ -685,7 +680,7 @@ func makeDatum(in *cloudwatch.MetricDatum, arr []float64) {
 	isAllOne := true
 	for _, f := range arr {
 		if count, exists := floatCounts[f]; exists {
-			in.Values = append(in.Values, aws.Float64(float64(f)))
+			in.Values = append(in.Values, aws.Float64(f))
 			in.Counts = append(in.Counts, aws.Float64(float64(count)))
 			if count != 1 {
 				isAllOne = false

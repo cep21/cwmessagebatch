@@ -24,8 +24,8 @@ func key(name *string, dims []*cloudwatch.Dimension) string {
 	ret := *name
 	d2 := make([]*cloudwatch.Dimension, 0, len(dims))
 	d2 = append(d2, dims...)
-	sort.Slice(dims, func(i, j int) bool {
-		return *dims[i].Name < *dims[j].Name
+	sort.Slice(d2, func(i, j int) bool {
+		return *d2[i].Name < *d2[j].Name
 	})
 	for _, d := range dims {
 		ret += *d.Name
