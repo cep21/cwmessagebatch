@@ -3,6 +3,7 @@ package cwmessagebatch
 import (
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 
@@ -14,6 +15,7 @@ func Test_resetToUTC(t *testing.T) {
 	type args struct {
 		datum *cloudwatch.MetricDatum
 	}
+	now := time.Now()
 	tests := []struct {
 		name string
 		args args
@@ -36,6 +38,28 @@ func Test_resetToUTC(t *testing.T) {
 			},
 			verify: func(t *testing.T, d *cloudwatch.MetricDatum) {
 				require.Nil(t, d.Timestamp)
+			},
+		},
+		{
+			name: "islocal",
+			args: args{
+				datum: &cloudwatch.MetricDatum{
+					Timestamp: aws.Time(now),
+				},
+			},
+			verify: func(t *testing.T, d *cloudwatch.MetricDatum) {
+				require.Equal(t, time.UTC, d.Timestamp.Location())
+			},
+		},
+		{
+			name: "isutc",
+			args: args{
+				datum: &cloudwatch.MetricDatum{
+					Timestamp: aws.Time(now.UTC()),
+				},
+			},
+			verify: func(t *testing.T, d *cloudwatch.MetricDatum) {
+				require.Equal(t, time.UTC, d.Timestamp.Location())
 			},
 		},
 	}
