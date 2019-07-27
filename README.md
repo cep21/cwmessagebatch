@@ -16,8 +16,8 @@ datum as you want.
 
 # Rules checked
 
-* Splits MetricDatum into buckets
-* Splits large Values arrays from single MetricDatum
+* Splits MetricDatum into buckets if there are too many Datum
+* Splits large Values arrays from single MetricDatum into multiple Datum
 * Splits large HTTP request bodies
 * gzip encodes request bodies
 * Optional filtering or uniformity around UTC timestamps and valid cloudwatch units
