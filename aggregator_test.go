@@ -48,7 +48,7 @@ func Test_resetToUTC(t *testing.T) {
 				},
 			},
 			verify: func(t *testing.T, d *cloudwatch.MetricDatum) {
-				require.Equal(t, time.UTC, d.Timestamp.UTC())
+				require.Equal(t, time.UTC, d.Timestamp.Location())
 			},
 		},
 		{
@@ -59,7 +59,7 @@ func Test_resetToUTC(t *testing.T) {
 				},
 			},
 			verify: func(t *testing.T, d *cloudwatch.MetricDatum) {
-				require.Equal(t, time.UTC, d.Timestamp.UTC())
+				require.Equal(t, time.UTC, d.Timestamp.Location())
 			},
 		},
 	}

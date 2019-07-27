@@ -2,6 +2,7 @@ package cwmessagebatch_test
 
 import (
 	"fmt"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -9,14 +10,14 @@ import (
 )
 
 func ExampleAggregator_PutMetricData() {
-	a := cwmessagebatch.Aggregator {
+	a := cwmessagebatch.Aggregator{
 		Client: cloudwatch.New(session.Must(session.NewSession(&aws.Config{
 			Region: aws.String("us-west-2"),
 		}))),
 	}
 	_, err := a.PutMetricData(&cloudwatch.PutMetricDataInput{
 		Namespace: aws.String("custom"),
-		MetricData: []*cloudwatch.MetricDatum {
+		MetricData: []*cloudwatch.MetricDatum{
 			{
 				MetricName: aws.String("custom metric"),
 			},
