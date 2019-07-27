@@ -28,7 +28,7 @@ func Test_resetToUTC(t *testing.T) {
 			},
 		},
 		{
-			name: "nilts",
+			name: "nil_ts",
 			args: args{
 				datum: &cloudwatch.MetricDatum{},
 			},

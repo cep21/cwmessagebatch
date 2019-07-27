@@ -18,38 +18,34 @@ const (
 	putMetricDataKBRequestSizeLimit = 38 * 1024
 )
 
+// awsRequestSizeError is an internal only type that we use to signal up the call stack that a
+// request will be too large for AWS's API.
 type awsRequestSizeError struct {
 	size int
 }
 
+// Error satisfies the interface of `error` and returns an error message about the
+// expected size.
 func (e *awsRequestSizeError) Error() string {
-	return fmt.Sprintf("%s: size=%d", e.Message(), e.size)
+	return fmt.Sprintf("request size too large: size=%d", e.size)
 }
 
-func (e *awsRequestSizeError) Code() string {
-	return "RequestEntityTooLarge"
-}
-
-func (e *awsRequestSizeError) Message() string {
-	return "request size too large"
-}
-
-func (e *awsRequestSizeError) OrigErr() error {
-	return nil
-}
-
+// RequestSizeError is a marker interface to signal a returned error is due to a large body size
 func (e *awsRequestSizeError) RequestSizeError() {
 }
 
+// requestSizeError is the private type set on request errors that result from building a gzip'd body
+// that is too large
 type requestSizeError interface {
 	RequestSizeError()
-	awserr.Error
+	error
 }
 
 var _ requestSizeError = &awsRequestSizeError{}
 
 // buildPostGZip construct a gzip'd post request.  Put this *after* the regular handler so it can
-// use the built in SDK logic to compress the request body
+// use the built in SDK logic to compress the request body.  Will set an error with method `RequestSizeError`
+// on the request if the compressed body is too large for API_PutMetricData's API
 func buildPostGZip(r *request.Request) {
 	r.HTTPRequest.Header.Set("Content-Encoding", "gzip")
 
@@ -79,11 +75,11 @@ func buildPostGZip(r *request.Request) {
 	r.SetBufferBody(w.Bytes())
 }
 
-func GZipBody(req *request.Request) {
-	const handlerName = "cwmessagebatch.gzip"
-	// Add the GZip handler
-	gzipHandler := request.NamedHandler{Name: handlerName, Fn: buildPostGZip}
+var gzipHandler = request.NamedHandler{Name: "cwmessagebatch.gzip", Fn: buildPostGZip}
+
+// gzipBody attaches a gzip handler to the Build phase of the eventual AWS request
+func gzipBody(req *request.Request) {
 	// Protect from double adds
-	req.Handlers.Build.RemoveByName(handlerName)
+	req.Handlers.Build.Remove(gzipHandler)
 	req.Handlers.Build.PushBackNamed(gzipHandler)
 }
