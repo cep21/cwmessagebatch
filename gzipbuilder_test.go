@@ -1,11 +1,12 @@
 package cwmessagebatch
 
 import (
-	"github.com/stretchr/testify/require"
 	"math/rand"
 	"net/http"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/aws/aws-sdk-go/aws/request"
 )
@@ -23,17 +24,14 @@ func reqWithBody(body string) *request.Request {
 }
 
 func Test_buildPostGZip(t *testing.T) {
-	type args struct {
-		r *request.Request
-	}
 	tests := []struct {
-		name string
-		arg  *request.Request
+		name     string
+		arg      *request.Request
 		validate func(r *request.Request)
 	}{
 		{
 			name: "basic",
-			arg: reqWithBody("hello world"),
+			arg:  reqWithBody("hello world"),
 			validate: func(r *request.Request) {
 				require.Equal(t, "gzip", r.HTTPRequest.Header.Get("Content-Encoding"))
 				require.NoError(t, r.Error)
@@ -41,14 +39,14 @@ func Test_buildPostGZip(t *testing.T) {
 		},
 		{
 			name: "should_compress",
-			arg: reqWithBody(strings.Repeat("A", 1024 * 64)),
+			arg:  reqWithBody(strings.Repeat("A", 1024*64)),
 			validate: func(r *request.Request) {
 				require.NoError(t, r.Error)
 			},
 		},
 		{
 			name: "shoulderr",
-			arg: reqWithBody(randomString(1024 * 64)),
+			arg:  reqWithBody(randomString(1024 * 64)),
 			validate: func(r *request.Request) {
 				require.Error(t, r.Error)
 				require.IsType(t, &awsRequestSizeError{}, r.Error)
@@ -56,6 +54,7 @@ func Test_buildPostGZip(t *testing.T) {
 		},
 	}
 	for _, tt := range tests {
+		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			buildPostGZip(tt.arg)
 			tt.validate(tt.arg)
@@ -65,7 +64,7 @@ func Test_buildPostGZip(t *testing.T) {
 
 func randomString(n int) string {
 	ret := strings.Builder{}
-	for i :=0;i<n;i++ {
+	for i := 0; i < n; i++ {
 		ret.WriteRune(rune(10 + rand.Intn(240)))
 	}
 	return ret.String()
