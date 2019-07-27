@@ -184,7 +184,7 @@ func TestIntegrationAggregator(t *testing.T) {
 func testManyDatum(t *testing.T) expectedPoints {
 	a := setupClient(t, nil)
 	// Should become 3 batches of the same datum
-	const numValues = 21
+	const numValues = maxDatumSize + 1
 	// Make a bunch of datum
 	dat := make([]*cloudwatch.MetricDatum, 0, numValues)
 	for i := 0; i < numValues; i++ {
