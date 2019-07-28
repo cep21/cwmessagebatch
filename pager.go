@@ -2,11 +2,9 @@ package cwpagedmetricput
 
 import (
 	"context"
+	"github.com/aws/aws-sdk-go/aws/request"
 	"strings"
 	"sync"
-	"time"
-
-	"github.com/aws/aws-sdk-go/aws/request"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -14,8 +12,6 @@ import (
 
 // Config controls optional parameters of Pager. The zero value is a reasonable default.
 type Config struct {
-	// True will reset all datum to the UTC timezone before submitting them
-	ResetUTC bool
 	// True will empty out the "unit" field of datum that have a unit not explicitly documented at
 	// https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_MetricDatum.html
 	ClearInvalidUnits bool
@@ -88,11 +84,6 @@ func (c *Pager) PutMetricDataWithContext(ctx aws.Context, input *cloudwatch.PutM
 			input.MetricData[i] = clearInvalidUnits(input.MetricData[i])
 		}
 	}
-	if c.Config.ResetUTC {
-		for i := range input.MetricData {
-			input.MetricData[i] = resetToUTC(input.MetricData[i])
-		}
-	}
 
 	// Split each individual datum that has too many .Values items into multiple datum
 	splitDatum := make([]*cloudwatch.MetricDatum, 0, len(input.MetricData))
@@ -124,18 +115,6 @@ func (c *Pager) sendBuckets(ctx context.Context, namespace *string, buckets [][]
 	}
 	wg.Wait()
 	return consolidateErr(errs)
-}
-
-// resetToUTC returns datum with the Timestamp reset to UTC
-func resetToUTC(datum *cloudwatch.MetricDatum) *cloudwatch.MetricDatum {
-	if datum == nil || datum.Timestamp == nil {
-		return datum
-	}
-	if datum.Timestamp.Location() == time.UTC {
-		return datum
-	}
-	datum.Timestamp = aws.Time(datum.Timestamp.UTC())
-	return datum
 }
 
 // clearInvalidUnits returns datum with Unit fields filtered of invalid values

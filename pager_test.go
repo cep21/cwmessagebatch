@@ -1,76 +1,12 @@
 package cwpagedmetricput
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
 	"reflect"
 	"testing"
-	"time"
-
-	"github.com/aws/aws-sdk-go/aws"
 
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/stretchr/testify/require"
 )
-
-func Test_resetToUTC(t *testing.T) {
-	type args struct {
-		datum *cloudwatch.MetricDatum
-	}
-	now := time.Now()
-	tests := []struct {
-		name string
-		args args
-		// Want returns an error if datum fails
-		verify func(t *testing.T, d *cloudwatch.MetricDatum)
-	}{
-		{
-			name: "nil",
-			args: args{
-				datum: nil,
-			},
-			verify: func(t *testing.T, d *cloudwatch.MetricDatum) {
-				require.Nil(t, d)
-			},
-		},
-		{
-			name: "nil_ts",
-			args: args{
-				datum: &cloudwatch.MetricDatum{},
-			},
-			verify: func(t *testing.T, d *cloudwatch.MetricDatum) {
-				require.Nil(t, d.Timestamp)
-			},
-		},
-		{
-			name: "islocal",
-			args: args{
-				datum: &cloudwatch.MetricDatum{
-					Timestamp: aws.Time(now),
-				},
-			},
-			verify: func(t *testing.T, d *cloudwatch.MetricDatum) {
-				require.Equal(t, time.UTC, d.Timestamp.Location())
-			},
-		},
-		{
-			name: "isutc",
-			args: args{
-				datum: &cloudwatch.MetricDatum{
-					Timestamp: aws.Time(now.UTC()),
-				},
-			},
-			verify: func(t *testing.T, d *cloudwatch.MetricDatum) {
-				require.Equal(t, time.UTC, d.Timestamp.Location())
-			},
-		},
-	}
-	for _, tt := range tests {
-		tt := tt
-		t.Run(tt.name, func(t *testing.T) {
-			got := resetToUTC(tt.args.datum)
-			tt.verify(t, got)
-		})
-	}
-}
 
 func Test_clearInvalidUnits(t *testing.T) {
 	type args struct {
