@@ -284,7 +284,7 @@ var _ error = &multiErr{}
 
 // Error returns a combined error string
 func (m *multiErr) Error() string {
-	ret := "Multiple errors: "
+	ret := "multiple errors: "
 	for i, e := range m.err {
 		if i != 0 {
 			ret += ","
