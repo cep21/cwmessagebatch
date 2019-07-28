@@ -380,7 +380,7 @@ func testManyLargeValues(t *testing.T, integration bool) expectedPoints {
 	floatVals := make([][]float64, 0, maxDatumSize)
 	for i := 0; i < maxDatumSize-1; i++ {
 		dat := largeBaseDatum(fmt.Sprintf("TestManyLargeValues%d", i))
-		rands := randoms(numValues)
+		rands := randoms(numValues, 1024, 1024*1024)
 		floatVals = append(floatVals, rands)
 		makeDatum(dat, rands)
 		datum = append(datum, dat)
@@ -670,11 +670,11 @@ func floatByCount(arr []float64) map[float64]int {
 	return ret
 }
 
-func randoms(times int) []float64 {
+func randoms(times int, max float64, round float64) []float64 {
 	ret := make([]float64, 0, times)
 	for i := 0; i < times; i++ {
 		// Round the numbers a bit so we don't loose precision in CW
-		v := math.Floor(rand.Float64()*1024*1024) / 1024 * 1024
+		v := math.Floor(rand.Float64()*max*round) / round
 		ret = append(ret, v)
 	}
 	return ret

@@ -171,6 +171,8 @@ func splitLargeValueArray(in *cloudwatch.MetricDatum) []*cloudwatch.MetricDatum 
 				Minimum:     in.StatisticValues.Minimum,
 			}
 		}
+		tmp := *in.StatisticValues
+		lastDatum.StatisticValues = &tmp
 		lastDatum.StatisticValues.SampleCount = aws.Float64(*lastDatum.StatisticValues.SampleCount - float64(len(ret)))
 	}
 	ret = append(ret, &lastDatum)
