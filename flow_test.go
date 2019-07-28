@@ -40,6 +40,10 @@ func testPager(t *testing.T, integration bool) {
 			f:    testSendingZero,
 		},
 		{
+			name: "testBadUnits",
+			f:    testBadUnits,
+		},
+		{
 			name: "testHdrHistogram",
 			f:    testHdrHistogram,
 		},
@@ -468,6 +472,28 @@ func testSendingZero(t *testing.T, integration bool) expectedPoints {
 	require.Error(t, err)
 
 	return nil
+}
+
+func testBadUnits(t *testing.T, integration bool) expectedPoints {
+	a := setupClient(t, nil, integration)
+	a.Config.ClearInvalidUnits = true
+	dat := baseDatum("testBadUnits")
+	dat.Unit = aws.String("invalid_unit")
+	dat.Value = aws.Float64(1.0)
+	_, err := a.PutMetricData(&cloudwatch.PutMetricDataInput{
+		Namespace:  &testNamespace,
+		MetricData: []*cloudwatch.MetricDatum{dat},
+	})
+	require.NoError(t, err)
+
+	return func(t *testing.T) {
+		matchSingleDatum(t, baseDatum("testBadUnits"), a.Client, &cloudwatch.Datapoint{
+			SampleCount: aws.Float64(1),
+			Minimum:     aws.Float64(1.0),
+			Maximum:     aws.Float64(1.0),
+			Sum:         aws.Float64(1.0),
+		})
+	}
 }
 
 func testHdrHistogram(t *testing.T, integration bool) expectedPoints {
