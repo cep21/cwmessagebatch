@@ -1,4 +1,4 @@
-package cwmessagebatch
+package cwpagedmetricput
 
 import (
 	"fmt"
@@ -29,7 +29,7 @@ type datumStruct struct {
 	f    func(t *testing.T, integration bool) expectedPoints
 }
 
-func testAggregator(t *testing.T, integration bool) {
+func testPager(t *testing.T, integration bool) {
 	runs := []datumStruct{
 		{
 			name: "ManyDatum",
@@ -172,7 +172,7 @@ func largeBaseDatum(metricName string) *cloudwatch.MetricDatum {
 	return ret
 }
 
-var testNamespace = "custom/cwmessagebatch"
+var testNamespace = "custom/cwpagedmetricput"
 
 // This works fine
 func testManyDatum(t *testing.T, integration bool) expectedPoints {
@@ -182,7 +182,7 @@ func testManyDatum(t *testing.T, integration bool) expectedPoints {
 	// Make a bunch of datum
 	dat := make([]*cloudwatch.MetricDatum, 0, numValues)
 	for i := 0; i < numValues; i++ {
-		dt := baseDatum("TestIntegrationAggregatorManyDatum")
+		dt := baseDatum("TestIntegrationPagerManyDatum")
 		dt.Value = aws.Float64(float64(i))
 		dat = append(dat, dt)
 	}
@@ -193,7 +193,7 @@ func testManyDatum(t *testing.T, integration bool) expectedPoints {
 	// This should split into two 3 requests
 	require.NoError(t, err)
 	return func(t *testing.T) {
-		matchSingleDatum(t, baseDatum("TestIntegrationAggregatorManyDatum"), a.Client, &cloudwatch.Datapoint{
+		matchSingleDatum(t, baseDatum("TestIntegrationPagerManyDatum"), a.Client, &cloudwatch.Datapoint{
 			SampleCount: aws.Float64(numValues),
 			Minimum:     aws.Float64(0),
 			Maximum:     aws.Float64(numValues - 1),
@@ -211,7 +211,7 @@ func testManyValuesOneDatumNoStatistics(t *testing.T, integration bool) expected
 	// Should become 3 batches of values, but without statistics set
 	const numValues = 150*2 + 1
 	// Make a bunch of datum
-	dat := baseDatum("TestIntegrationAggregatorManyValuesOneDatumNoStatistics")
+	dat := baseDatum("TestIntegrationPagerManyValuesOneDatumNoStatistics")
 	for i := 0; i < numValues; i++ {
 		dat.Counts = append(dat.Counts, aws.Float64(1))
 		dat.Values = append(dat.Values, aws.Float64(float64(i)*10))
@@ -222,7 +222,7 @@ func testManyValuesOneDatumNoStatistics(t *testing.T, integration bool) expected
 	})
 	require.NoError(t, err)
 	return func(t *testing.T) {
-		matchSingleDatum(t, baseDatum("TestIntegrationAggregatorManyValuesOneDatumNoStatistics"), a.Client, &cloudwatch.Datapoint{
+		matchSingleDatum(t, baseDatum("TestIntegrationPagerManyValuesOneDatumNoStatistics"), a.Client, &cloudwatch.Datapoint{
 			SampleCount: aws.Float64(numValues),
 			Minimum:     aws.Float64(0),
 			Maximum:     aws.Float64(numValues*10 - 10),
@@ -237,14 +237,14 @@ func testManyValuesOneDatumNoStatistics(t *testing.T, integration bool) expected
 // This works fine (no stats expected)
 func testSameTSMultipleStatistics(t *testing.T, integration bool) expectedPoints {
 	a := setupClient(t, nil, integration)
-	dat := baseDatum("TestIntegrationAggregatorSameTSMultipleStatistics")
+	dat := baseDatum("TestIntegrationPagerSameTSMultipleStatistics")
 	dat.StatisticValues = &cloudwatch.StatisticSet{
 		Minimum:     aws.Float64(2),
 		Maximum:     aws.Float64(20),
 		SampleCount: aws.Float64(5),
 		Sum:         aws.Float64(44),
 	}
-	dat2 := baseDatum("TestIntegrationAggregatorSameTSMultipleStatistics")
+	dat2 := baseDatum("TestIntegrationPagerSameTSMultipleStatistics")
 	dat2.StatisticValues = &cloudwatch.StatisticSet{
 		Minimum:     aws.Float64(1),
 		Maximum:     aws.Float64(10),
@@ -257,7 +257,7 @@ func testSameTSMultipleStatistics(t *testing.T, integration bool) expectedPoints
 	})
 	require.NoError(t, err)
 	return func(t *testing.T) {
-		matchSingleDatum(t, baseDatum("TestIntegrationAggregatorSameTSMultipleStatistics"), a.Client, &cloudwatch.Datapoint{
+		matchSingleDatum(t, baseDatum("TestIntegrationPagerSameTSMultipleStatistics"), a.Client, &cloudwatch.Datapoint{
 			SampleCount: aws.Float64(10),
 			Minimum:     aws.Float64(1),
 			Maximum:     aws.Float64(20),
@@ -271,7 +271,7 @@ func testStatisticsSetLies(t *testing.T, integration bool) expectedPoints {
 	a := setupClient(t, nil, integration)
 	const numValues = 10
 	// Make a bunch of datum
-	dat := baseDatum("TestIntegrationAggregatorStatisticsSetLies")
+	dat := baseDatum("TestIntegrationPagerStatisticsSetLies")
 	dat.StatisticValues = &cloudwatch.StatisticSet{
 		Minimum:     aws.Float64(0),
 		Maximum:     aws.Float64(1000),
@@ -289,7 +289,7 @@ func testStatisticsSetLies(t *testing.T, integration bool) expectedPoints {
 	})
 	require.NoError(t, err)
 	return func(t *testing.T) {
-		matchSingleDatum(t, baseDatum("TestIntegrationAggregatorStatisticsSetLies"), a.Client, &cloudwatch.Datapoint{
+		matchSingleDatum(t, baseDatum("TestIntegrationPagerStatisticsSetLies"), a.Client, &cloudwatch.Datapoint{
 			SampleCount: aws.Float64(100),
 			Minimum:     aws.Float64(0),
 			Maximum:     aws.Float64(1000),
@@ -305,7 +305,7 @@ func testManyValuesOneDatumWithCloseStatistics(t *testing.T, integration bool) e
 	//const numValues = 150 * 2 + 1
 	const numValues = 149
 	// Make a bunch of datum
-	dat := baseDatum("TestIntegrationAggregatorManyValuesOneDatumWithCloseStatistics")
+	dat := baseDatum("TestIntegrationPagerManyValuesOneDatumWithCloseStatistics")
 	dat.StatisticValues = &cloudwatch.StatisticSet{
 		Minimum:     aws.Float64(0),                                 // Keep min the same
 		Maximum:     aws.Float64((numValues-1)*10 + 10000),          // Move the max and sum way up
@@ -322,7 +322,7 @@ func testManyValuesOneDatumWithCloseStatistics(t *testing.T, integration bool) e
 	})
 	require.NoError(t, err)
 	return func(t *testing.T) {
-		matchSingleDatum(t, baseDatum("TestIntegrationAggregatorManyValuesOneDatumWithCloseStatistics"), a.Client, &cloudwatch.Datapoint{
+		matchSingleDatum(t, baseDatum("TestIntegrationPagerManyValuesOneDatumWithCloseStatistics"), a.Client, &cloudwatch.Datapoint{
 			SampleCount: aws.Float64(numValues),
 			Minimum:     aws.Float64(0),
 			Maximum:     aws.Float64((numValues-1)*10 + 10000),
@@ -338,7 +338,7 @@ func testManyValuesBadSampleCount(t *testing.T, integration bool) expectedPoints
 	//const numValues = 150 * 2 + 1
 	const numValues = 149
 	// Make a bunch of datum
-	dat := baseDatum("TestIntegrationAggregatorManyValuesBadSampleCount")
+	dat := baseDatum("TestIntegrationPagerManyValuesBadSampleCount")
 	dat.StatisticValues = &cloudwatch.StatisticSet{
 		Minimum:     aws.Float64(0),
 		Maximum:     aws.Float64((numValues - 1) * 10),
@@ -355,7 +355,7 @@ func testManyValuesBadSampleCount(t *testing.T, integration bool) expectedPoints
 	})
 	require.NoError(t, err)
 	return func(t *testing.T) {
-		matchSingleDatum(t, baseDatum("TestIntegrationAggregatorManyValuesBadSampleCount"), a.Client, &cloudwatch.Datapoint{
+		matchSingleDatum(t, baseDatum("TestIntegrationPagerManyValuesBadSampleCount"), a.Client, &cloudwatch.Datapoint{
 			SampleCount: aws.Float64(numValues - 100),
 			Minimum:     aws.Float64(0),
 			Maximum:     aws.Float64((numValues - 1) * 10),
@@ -400,7 +400,7 @@ func testManyValuesOneDatumWithStatistics(t *testing.T, integration bool) expect
 	//const numValues = 150 * 2 + 1
 	const numValues = 149
 	// Make a bunch of datum
-	dat := baseDatum("TestIntegrationAggregatorManyValuesOneDatumWithStatistics")
+	dat := baseDatum("TestIntegrationPagerManyValuesOneDatumWithStatistics")
 	dat.StatisticValues = &cloudwatch.StatisticSet{
 		Minimum:     aws.Float64(0),
 		Maximum:     aws.Float64((numValues - 1) * 10),
@@ -417,7 +417,7 @@ func testManyValuesOneDatumWithStatistics(t *testing.T, integration bool) expect
 	})
 	require.NoError(t, err)
 	return func(t *testing.T) {
-		matchSingleDatum(t, baseDatum("TestIntegrationAggregatorManyValuesOneDatumWithStatistics"), a.Client, &cloudwatch.Datapoint{
+		matchSingleDatum(t, baseDatum("TestIntegrationPagerManyValuesOneDatumWithStatistics"), a.Client, &cloudwatch.Datapoint{
 			SampleCount: aws.Float64(numValues),
 			Minimum:     aws.Float64(0),
 			Maximum:     aws.Float64((numValues - 1) * 10),
@@ -438,7 +438,7 @@ func testManyValuesNoSplitOneDatumWithStatistics(t *testing.T, integration bool)
 	for i := 0; i < numValues; i++ {
 		arr = append(arr, float64(i))
 	}
-	dat := baseDatum("TestIntegrationAggregatorManyValuesNoSplitOneDatumWithStatistics")
+	dat := baseDatum("TestIntegrationPagerManyValuesNoSplitOneDatumWithStatistics")
 	makeDatum(dat, arr)
 	_, err := a.PutMetricData(&cloudwatch.PutMetricDataInput{
 		Namespace:  &testNamespace,
@@ -446,7 +446,7 @@ func testManyValuesNoSplitOneDatumWithStatistics(t *testing.T, integration bool)
 	})
 	require.NoError(t, err)
 	return func(t *testing.T) {
-		matchSingleDatum(t, baseDatum("TestIntegrationAggregatorManyValuesNoSplitOneDatumWithStatistics"), a.Client, &cloudwatch.Datapoint{
+		matchSingleDatum(t, baseDatum("TestIntegrationPagerManyValuesNoSplitOneDatumWithStatistics"), a.Client, &cloudwatch.Datapoint{
 			SampleCount: aws.Float64(numValues),
 			Minimum:     aws.Float64(0),
 			Maximum:     aws.Float64(numValues - 1),
@@ -519,7 +519,7 @@ func testManyValuesSplitOneDatumWithStatistics(t *testing.T, integration bool) e
 		arr = append(arr, float64(i))
 		expectedSum += i
 	}
-	dat := baseDatum("TestIntegrationAggregatorManyValuesSplitOneDatumWithStatistics")
+	dat := baseDatum("TestIntegrationPagerManyValuesSplitOneDatumWithStatistics")
 	makeDatum(dat, arr)
 	_, err := a.PutMetricData(&cloudwatch.PutMetricDataInput{
 		Namespace:  &testNamespace,
@@ -528,7 +528,7 @@ func testManyValuesSplitOneDatumWithStatistics(t *testing.T, integration bool) e
 	require.NoError(t, err)
 	//Expect 300 data points.
 	return func(t *testing.T) {
-		matchSingleDatum(t, baseDatum("TestIntegrationAggregatorManyValuesSplitOneDatumWithStatistics"), a.Client, &cloudwatch.Datapoint{
+		matchSingleDatum(t, baseDatum("TestIntegrationPagerManyValuesSplitOneDatumWithStatistics"), a.Client, &cloudwatch.Datapoint{
 			SampleCount: aws.Float64(numValues),
 			Minimum:     aws.Float64(0),
 			Maximum:     aws.Float64(numValues - 1),
@@ -615,16 +615,16 @@ func testPyramidHeightOffsetAggregation(t *testing.T, integration bool) expected
 
 // -------------------- Helper functions below this
 
-func setupClient(t *testing.T, _ func(r *request.Request), integration bool) *Aggregator {
+func setupClient(t *testing.T, _ func(r *request.Request), integration bool) *Pager {
 	if !integration {
-		return &Aggregator{
+		return &Pager{
 			Client: &memoryCloudWatchClient{},
 		}
 	}
 	sess, err := session.NewSession()
 	assert.NoError(t, err)
 	cwClient := cloudwatch.New(sess)
-	return &Aggregator{
+	return &Pager{
 		Client: cwClient,
 	}
 }

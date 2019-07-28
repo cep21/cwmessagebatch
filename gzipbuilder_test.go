@@ -1,4 +1,4 @@
-package cwmessagebatch
+package cwpagedmetricput
 
 import (
 	"math/rand"

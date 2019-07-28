@@ -1,4 +1,4 @@
-module github.com/cep21/cwmessagebatch
+module github.com/cep21/cwpagedmetricput
 
 go 1.11
 

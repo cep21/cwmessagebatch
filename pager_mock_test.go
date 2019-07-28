@@ -1,4 +1,4 @@
-package cwmessagebatch
+package cwpagedmetricput
 
 import (
 	"errors"
@@ -148,6 +148,6 @@ var _ CloudWatchClient = &memoryCloudWatchClient{}
 var _ fetchableClient = &memoryCloudWatchClient{}
 var _ fetchableClient = &cloudwatch.CloudWatch{}
 
-func TestAggregator(t *testing.T) {
-	testAggregator(t, false)
+func TestPager(t *testing.T) {
+	testPager(t, false)
 }

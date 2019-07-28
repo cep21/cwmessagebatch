@@ -1,4 +1,4 @@
-package cwmessagebatch_test
+package cwpagedmetricput_test
 
 import (
 	"fmt"
@@ -6,11 +6,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
-	"github.com/cep21/cwmessagebatch"
+	"github.com/cep21/cwpagedmetricput"
 )
 
-func ExampleAggregator_PutMetricData() {
-	a := cwmessagebatch.Aggregator{
+func ExamplePager_PutMetricData() {
+	a := cwpagedmetricput.Pager{
 		Client: cloudwatch.New(session.Must(session.NewSession(&aws.Config{
 			Region: aws.String("us-west-2"),
 		}))),

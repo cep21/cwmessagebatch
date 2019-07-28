@@ -1,10 +1,10 @@
-# cwmessagebatch
+# cwpagedmetricput
 
-[![Build Status](https://travis-ci.org/cep21/cwmessagebatch.svg?branch=master)](https://travis-ci.org/cep21/cwmessagebatch)
-[![GoDoc](https://godoc.org/github.com/cep21/cwmessagebatch?status.svg)](https://godoc.org/github.com/cep21/cwmessagebatch)
-[![Coverage Status](https://coveralls.io/repos/github/cep21/cwmessagebatch/badge.svg)](https://coveralls.io/github/cep21/cwmessagebatch)
+[![Build Status](https://travis-ci.org/cep21/cwpagedmetricput.svg?branch=master)](https://travis-ci.org/cep21/cwpagedmetricput)
+[![GoDoc](https://godoc.org/github.com/cep21/cwpagedmetricput?status.svg)](https://godoc.org/github.com/cep21/cwpagedmetricput)
+[![Coverage Status](https://coveralls.io/repos/github/cep21/cwpagedmetricput/badge.svg)](https://coveralls.io/github/cep21/cwpagedmetricput)
 
-cwmessagebatch allows you to send metrics to cloudwatch without worrying
+cwpagedmetricput allows you to send metrics to cloudwatch without worrying
 about how many metrics you can reference in a single request or how
 to compress or split the metrics when they are too big.
 
@@ -25,8 +25,8 @@ datum as you want.
 # Example
 
 ```go
-func ExampleAggregator_PutMetricData() {
-	a := cwmessagebatch.Aggregator {
+func ExamplePager_PutMetricData() {
+	a := cwpagedmetricput.Pager {
 		Client: cloudwatch.New(session.Must(session.NewSession(&aws.Config{
 			Region: aws.String("us-west-2"),
 		}))),
