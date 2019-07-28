@@ -11,15 +11,14 @@ import (
 
 func ExamplePager_PutMetricData() {
 	a := cwpagedmetricput.Pager{
-		Client: cloudwatch.New(session.Must(session.NewSession(&aws.Config{
-			Region: aws.String("us-west-2"),
-		}))),
+		Client: cloudwatch.New(session.Must(session.NewSession())),
 	}
 	_, err := a.PutMetricData(&cloudwatch.PutMetricDataInput{
 		Namespace: aws.String("custom"),
 		MetricData: []*cloudwatch.MetricDatum{
 			{
 				MetricName: aws.String("custom metric"),
+				Value: aws.Float64(1.0),
 			},
 		},
 	})
