@@ -20,7 +20,7 @@ datum as you want.
 * Splits large Values arrays from single MetricDatum into multiple Datum
 * Splits large HTTP request bodies
 * gzip encodes request bodies
-* Optional filtering or uniformity around UTC timestamps and valid cloudwatch units
+* Optional filtering of valid CloudWatch units
 
 # Example
 
