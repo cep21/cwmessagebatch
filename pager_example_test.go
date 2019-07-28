@@ -16,7 +16,7 @@ func ExamplePager_PutMetricData() {
 		MetricData: []*cloudwatch.MetricDatum{
 			{
 				MetricName: aws.String("custom metric"),
-				Value: aws.Float64(1.0),
+				Value:      aws.Float64(1.0),
 			},
 		},
 	})
