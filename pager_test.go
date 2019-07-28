@@ -2,9 +2,10 @@ package cwpagedmetricput
 
 import (
 	"errors"
-	"github.com/stretchr/testify/require"
 	"reflect"
 	"testing"
+
+	"github.com/stretchr/testify/require"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
@@ -62,8 +63,8 @@ func Test_clearInvalidUnits(t *testing.T) {
 
 func Test_consolidateErr(t *testing.T) {
 	tests := []struct {
-		name    string
-		args    []error
+		name     string
+		args     []error
 		validate func(error)
 	}{
 		{

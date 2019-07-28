@@ -76,7 +76,7 @@ func (m *memoryCloudWatchClient) GetMetricStatistics(input *cloudwatch.GetMetric
 func (m *memoryCloudWatchClient) PutMetricDataWithContext(ctx aws.Context, in *cloudwatch.PutMetricDataInput, opts ...request.Option) (*cloudwatch.PutMetricDataOutput, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
-	if len(in.GoString()) > putMetricDataKBRequestSizeLimit * 2 {
+	if len(in.GoString()) > putMetricDataKBRequestSizeLimit*2 {
 		// Simulate large request errors
 		// Multiply by two (arbitrary value) since it's allowed to be a bit bigger (will be gzip)
 		return nil, &awsRequestSizeError{
