@@ -2,9 +2,10 @@ package cwpagedmetricput
 
 import (
 	"context"
-	"github.com/aws/aws-sdk-go/aws/request"
 	"strings"
 	"sync"
+
+	"github.com/aws/aws-sdk-go/aws/request"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
