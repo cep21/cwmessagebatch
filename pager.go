@@ -1,4 +1,4 @@
-package cwmessagebatch
+package cwpagedmetricput
 
 import (
 	"context"
@@ -12,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/cloudwatch"
 )
 
-// Config controls optional parameters of Aggregator. The zero value is a reasonable default.
+// Config controls optional parameters of Pager. The zero value is a reasonable default.
 type Config struct {
 	// True will reset all datum to the UTC timezone before submitting them
 	ResetUTC bool
@@ -35,13 +35,13 @@ type CloudWatchClient interface {
 
 // The API of aggregator matches the API of cloudwatch
 var _ CloudWatchClient = &cloudwatch.CloudWatch{}
-var _ CloudWatchClient = &Aggregator{}
+var _ CloudWatchClient = &Pager{}
 
-// Aggregator behaves like CloudWatch's MetricData API, but takes care of all of the smaller parts for you around
+// Pager behaves like CloudWatch's MetricData API, but takes care of all of the smaller parts for you around
 // how to correctly bucket and split MetricDatum.
-// Aggregator is as thread safe as the Client parameter.  If you're using *cloudwatch.CloudWatch as your
+// Pager is as thread safe as the Client parameter.  If you're using *cloudwatch.CloudWatch as your
 // Client, then it will be thread safe.
-type Aggregator struct {
+type Pager struct {
 	// Client is required and is usually an instance of *cloudwatch.CloudWatch
 	Client CloudWatchClient
 	// Config is optional and controls how data is filtered or aggregated
@@ -50,14 +50,14 @@ type Aggregator struct {
 
 // onDroppedDatum optionally calls the Config's OnDroppedDatum if the API splits a request and is unable
 // to send all the datum.
-func (c *Aggregator) onDroppedDatum(datum *cloudwatch.MetricDatum) {
+func (c *Pager) onDroppedDatum(datum *cloudwatch.MetricDatum) {
 	if c.Config.OnDroppedDatum != nil {
 		c.Config.OnDroppedDatum(datum)
 	}
 }
 
 // onGo is a `go` alternative that we call to abstract out if a function should execute serially or in concurrently.
-func (c *Aggregator) onGo(f func(errIdx int, bucket []*cloudwatch.MetricDatum), errIdx int, bucket []*cloudwatch.MetricDatum) {
+func (c *Pager) onGo(f func(errIdx int, bucket []*cloudwatch.MetricDatum), errIdx int, bucket []*cloudwatch.MetricDatum) {
 	if c.Config.SerialSends {
 		f(errIdx, bucket)
 		return
@@ -68,13 +68,13 @@ func (c *Aggregator) onGo(f func(errIdx int, bucket []*cloudwatch.MetricDatum), 
 // PutMetricData should be a drop in replacement for *cloudwatch.CloudWatch.PutMetricData, but
 // taking care of splitting datum that are too large.
 // Note: More difficult to support PutMetricDataRequest since it is not one request.Request, but many.
-func (c *Aggregator) PutMetricData(input *cloudwatch.PutMetricDataInput) (*cloudwatch.PutMetricDataOutput, error) {
+func (c *Pager) PutMetricData(input *cloudwatch.PutMetricDataInput) (*cloudwatch.PutMetricDataOutput, error) {
 	return c.PutMetricDataWithContext(context.Background(), input)
 }
 
 // PutMetricDataWithContext should be a drop in replacement for *cloudwatch.CloudWatch.PutMetricDataWithContext, but
 // taking care of splitting datum that are too large.
-func (c *Aggregator) PutMetricDataWithContext(ctx aws.Context, input *cloudwatch.PutMetricDataInput, reqs ...request.Option) (*cloudwatch.PutMetricDataOutput, error) {
+func (c *Pager) PutMetricDataWithContext(ctx aws.Context, input *cloudwatch.PutMetricDataInput, reqs ...request.Option) (*cloudwatch.PutMetricDataOutput, error) {
 	if input == nil {
 		// Fallback behaviour is whatever the client does for nil input
 		return c.Client.PutMetricDataWithContext(ctx, input)
@@ -112,7 +112,7 @@ func (c *Aggregator) PutMetricDataWithContext(ctx aws.Context, input *cloudwatch
 }
 
 // sendBuckets executes sendDatum on all the buckets in parallel.  It returns when all buckets finish executing.
-func (c *Aggregator) sendBuckets(ctx context.Context, namespace *string, buckets [][]*cloudwatch.MetricDatum, reqs []request.Option) error {
+func (c *Pager) sendBuckets(ctx context.Context, namespace *string, buckets [][]*cloudwatch.MetricDatum, reqs []request.Option) error {
 	errs := make([]error, len(buckets))
 	wg := sync.WaitGroup{}
 	for i, bucket := range buckets {
@@ -215,7 +215,7 @@ func bucketDatum(in []*cloudwatch.MetricDatum) [][]*cloudwatch.MetricDatum {
 
 // sendDatum will construct PutMetricDataInput objects and send them to c.Client.  If any of these sends fail because
 // the sent request body would be too big, the datum array is split into halves and sent separately.
-func (c *Aggregator) sendDatum(ctx context.Context, namespace *string, datum []*cloudwatch.MetricDatum, reqs []request.Option) error {
+func (c *Pager) sendDatum(ctx context.Context, namespace *string, datum []*cloudwatch.MetricDatum, reqs []request.Option) error {
 	if len(datum) == 0 {
 		return nil
 	}

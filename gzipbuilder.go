@@ -1,4 +1,4 @@
-package cwmessagebatch
+package cwpagedmetricput
 
 import (
 	"bytes"
@@ -75,7 +75,7 @@ func buildPostGZip(r *request.Request) {
 	r.SetBufferBody(w.Bytes())
 }
 
-var gzipHandler = request.NamedHandler{Name: "cwmessagebatch.gzip", Fn: buildPostGZip}
+var gzipHandler = request.NamedHandler{Name: "cwpagedmetricput.gzip", Fn: buildPostGZip}
 
 // gzipBody attaches a gzip handler to the Build phase of the eventual AWS request
 func gzipBody(req *request.Request) {
